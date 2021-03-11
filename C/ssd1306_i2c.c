@@ -11,6 +11,9 @@
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <net/if.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
 
 char IPSource[20]={0};
 int i2cd;
@@ -141,8 +144,8 @@ void OLED_WR_Byte(unsigned dat,unsigned cmd)
 	{
 		Write_IIC_Command(dat);
 	}
-  delay(1);
 
+  usleep(500); 
 }
 
 //To send data
