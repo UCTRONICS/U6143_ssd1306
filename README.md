@@ -46,6 +46,7 @@ sudo apt-get install python3-pil
 ```
 - Test demo 
 ```bash 
+cd /home/pi/U6143_ssd1306/python 
 sudo python3 ssd1306_stats.py
 ```
 
