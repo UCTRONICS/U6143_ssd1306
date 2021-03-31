@@ -230,14 +230,14 @@ void OLED_Clear(void)
 void LCD_DisplayTemperature(void)
 {
   unsigned char symbol=0;
-  char ip[20];
-  char *test_eth = "wlan0";
+  char ip[20] = {0};
   unsigned int temp=0;
   FILE * fp;
-  unsigned char  buffer[80];
+  unsigned char  buffer[80] = {0};
   temp=Obaintemperature();                  //Gets the temperature of the CPU
   fp=popen("top -bn1 | grep load | awk '{printf \"%.2f\", $(NF-2)}'","r");    //Gets the load on the CPU
   fgets(buffer, sizeof (buffer),fp);                                    //Read the CPU load
+  pclose(fp);
   buffer[3]='\0';        
   strcpy(ip,GetIpAddress());   //Get the IP address of the device's wireless network card
   symbol=strcmp(IPSource,ip);
@@ -264,7 +264,7 @@ unsigned char Obaintemperature(void)
 {
     FILE *fd;
     unsigned int temp;
-    char buff[256];
+    char buff[150] = {0};
 
     fd = fopen("/sys/class/thermal/thermal_zone0/temp","r");
     fgets(buff,sizeof(buff),fd);
