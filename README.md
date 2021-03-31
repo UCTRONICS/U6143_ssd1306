@@ -22,6 +22,21 @@ sudo make clean && sudo make
 sudo ./display
 ```
 
+## Add automatic start script
+- Open the rc.local file 
+```bash
+sudo nano /etc/rc.local
+```
+- Add command to the rc.local file
+```bash
+cd /home/pi/U6143_ssd1306/C
+sudo make clean 
+sudo make 
+sudo ./display &
+```
+- reboot your system
+
+
 
 
 
