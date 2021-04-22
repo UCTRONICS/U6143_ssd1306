@@ -36,6 +36,13 @@ sudo ./display &
 ```
 - reboot your system
 
+## Add automatic systemd start to systemd
+```bash
+sudo systemctl link /home/pi/U6143_ssd1306/C/ssd1306.service
+sudo systemctl enable ssd1306.service
+sudo systemctl start ssd1306.service
+```
+
 ## For older 0.91 inch lcd without mcu 
 - For the older version lcd without mcu controller, you can use python demo
 - Install the dependent library files
@@ -49,13 +56,3 @@ sudo apt-get install python3-pil
 cd /home/pi/U6143_ssd1306/python 
 sudo python3 ssd1306_stats.py
 ```
-
-
-
-
-
-
-
-
-
-
