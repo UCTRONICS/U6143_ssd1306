@@ -1,10 +1,11 @@
 # U6143_ssd1306
-## Preparation
+- Enable I2C interface
 ```bash
 sudo raspi-config
 ```
 Choose `Interface Options` | `I2C`
 Answer `Yes` to whether you would like the ARM I2C interface to be enabled.
+- Install Git and library dependencies
 ```bash
 sudo apt update
 sudo apt install git wiringpi
@@ -20,7 +21,7 @@ git clone https://github.com/UCTRONICS/U6143_ssd1306.git
 cd U6143_ssd1306/C
 ```
 ```bash
-sudo make clean && sudo make 
+make clean && make 
 ```
 
 ## Run 
