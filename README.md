@@ -39,7 +39,7 @@ sudo nano /etc/rc.local
 ```
 - Add command to the rc.local file
 ```bash
-/usr/loca/bin/display &
+/usr/local/bin/display &
 ```
 ## Reboot your system
 ```bash
