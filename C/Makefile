@@ -1,9 +1,9 @@
 Target		= display
-CXX         		= gcc
+CXX         = gcc
 LIBS		= -lwiringPi
 ODIR		= obj
-SRC			=$(wildcard *.c)
-DIR			=$(notdir $(SRC))
+SRC			= $(wildcard *.c)
+DIR			= $(notdir $(SRC))
 OBJ 		= $(patsubst %.c, %.o, $(DIR))
 $(Target): $(OBJ)
 	$(CXX) $^ -o $@  $(LIBS)

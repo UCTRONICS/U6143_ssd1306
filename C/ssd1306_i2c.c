@@ -392,12 +392,12 @@ void FirstGetIpAddress(void)
 
 char *GetIpAddress(void)
 {
-  FILE *f;
+  FILE *fd;
   char line[100], *p, *c;
 
-  f = fopen("/proc/net/route", "r");
+  fd = fopen("/proc/net/route", "r");
 
-  while (fgets(line, 100, f))
+  while (fgets(line, 100, fd))
   {
     p = strtok(line, " \t");
     c = strtok(NULL, " \t");
@@ -411,6 +411,8 @@ char *GetIpAddress(void)
     }
   }
 
+  fclose(fd);
+
   //Default to eth0 interface
   if (p == NULL)
   {
@@ -418,10 +420,10 @@ char *GetIpAddress(void)
     p = "eth0";
   }
 
-  int fd;
+  int sockfd;
   struct ifreq ifr;
 
-  fd = socket(AF_INET, SOCK_DGRAM, 0);
+  sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
   //Type of address to retrieve - IPv4 IP address
   ifr.ifr_addr.sa_family = AF_INET;
@@ -429,9 +431,9 @@ char *GetIpAddress(void)
   //Copy the interface name in the ifreq structure
   strncpy(ifr.ifr_name, p, IFNAMSIZ - 1);
 
-  ioctl(fd, SIOCGIFADDR, &ifr);
+  ioctl(sockfd, SIOCGIFADDR, &ifr);
 
-  close(fd);
+  close(sockfd);
 
   return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
