@@ -96,7 +96,7 @@ void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char chr, unsigned
   }
 }
 
-unsigned int oled_pow(unsigned char m, unsigned char n)
+unsigned int OLED_pow(unsigned char m, unsigned char n)
 {
   unsigned int result = 1;
   while (n--)
@@ -116,7 +116,7 @@ void OLED_ShowNum(unsigned char x, unsigned char y, unsigned int num, unsigned c
   unsigned char enshow = 0;
   for (t = 0; t < len; t++)
   {
-    temp = (num / oled_pow(10, len - t - 1)) % 10;
+    temp = (num / OLED_pow(10, len - t - 1)) % 10;
     if (enshow == 0 && t < (len - 1))
     {
       if (temp == 0)
