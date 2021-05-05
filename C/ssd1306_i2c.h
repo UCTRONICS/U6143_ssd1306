@@ -2,6 +2,7 @@
 * This is the UCTRONICS ssd1306 library header file
 * This library just supports the 128X32 LCD with I2C interface
 *********************************************************************/
+
 #ifndef SSD1306_I2C_H_
 #define SSD1306_I2C_H_
 
