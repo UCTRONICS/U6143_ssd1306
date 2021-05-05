@@ -28,11 +28,11 @@ void OLED_DrawPartBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsi
 void OLED_Clear(void);
 void OLED_ClearLint(unsigned char, unsigned char);
 void OLED_ShowNum(unsigned char, unsigned char, unsigned int, unsigned char, unsigned char);
-unsigned int oled_pow(unsigned char, unsigned char);
+unsigned int OLED_pow(unsigned char, unsigned char);
 void LCD_Display(unsigned char symbol);
-void LCD_DisPlayCpuMemory(void);
+void LCD_DisplayCpuMemory(void);
 void LCD_DisplaySdMemory(void);
 void FirstGetIpAddress(void);
 char *GetIpAddress(void);
-unsigned char Obaintemperature(void);
+unsigned char GetTemperature(void);
 #endif /* _SSD1306_I2C_H_ */
