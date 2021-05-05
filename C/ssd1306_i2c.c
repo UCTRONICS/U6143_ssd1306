@@ -167,7 +167,10 @@ void Write_IIC_Command(unsigned char IIC_Command)
   wiringPiI2CWriteReg8(i2cd, 0x00, IIC_Command);
 }
 
-/***********Display the BMP image  128X32  Starting point coordinates(x,y),The range of x 0~127   The range of y 0~4*****************/
+//Display the BMP image 128X32
+//Starting point coordinates (x,y)
+//The range of x 0~127
+//The range of y 0~4
 void OLED_DrawBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, unsigned char BMP[][512], unsigned char symbol)
 {
   unsigned int j = 0;
@@ -206,9 +209,7 @@ void OLED_DrawPartBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsi
   }
 }
 
-/*
-*	Clear specified row
-*/
+//Clear specified row
 void OLED_ClearLint(unsigned char x1, unsigned char x2)
 {
   unsigned char i, n;
@@ -235,9 +236,7 @@ void OLED_Clear(void)
   }
 }
 
-/*
-* LCD displays CPU temperature and other information
-*/
+//LCD displays CPU temperature and other information
 void LCD_DisplayTemperature(void)
 {
   unsigned char symbol = 0;
@@ -245,12 +244,12 @@ void LCD_DisplayTemperature(void)
   unsigned int temp = 0;
   FILE *fp;
   unsigned char buffer[80] = {0};
-  temp = Obaintemperature();                                                  //Gets the temperature of the CPU
+  temp = GetTemperature();                                                  //Gets the temperature of the CPU
   fp = popen("top -bn1 | grep load | awk '{printf \"%.2f\", $(NF-2)}'", "r"); //Gets the load on the CPU
   fgets(buffer, sizeof(buffer), fp);                                          //Read the CPU load
   pclose(fp);
   buffer[3] = '\0';
-  strcpy(ip, GetIpAddress()); //Get the IP address of the device's wireless network card
+  strcpy(ip, GetIpAddress());
   symbol = strcmp(IPSource, ip);
   if (symbol != 0)
   {
@@ -271,7 +270,7 @@ void LCD_DisplayTemperature(void)
   OLED_ShowString(87, 3, buffer, 8); //Display CPU load
 }
 
-unsigned char Obaintemperature(void)
+unsigned char GetTemperature(void)
 {
   FILE *fd;
   unsigned int temp;
@@ -286,10 +285,8 @@ unsigned char Obaintemperature(void)
   return temp / 1000;
 }
 
-/*
-* LCD displays CPU memory and other information
-*/
-void LCD_DisPlayCpuMemory(void)
+//LCD displays CPU memory and other information
+void LCD_DisplayCpuMemory(void)
 {
   struct sysinfo s_info;
   float Totalram = 0.0;
@@ -316,9 +313,7 @@ void LCD_DisPlayCpuMemory(void)
   }
 }
 
-/*
-* LCD displays SD card memory information
-*/
+//LCD displays SD card memory information
 void LCD_DisplaySdMemory(void)
 {
   char usedsize_GB[10] = {0};
@@ -375,7 +370,7 @@ void LCD_Display(unsigned char symbol)
     LCD_DisplayTemperature();
     break;
   case 1:
-    LCD_DisPlayCpuMemory();
+    LCD_DisplayCpuMemory();
     break;
   case 2:
     LCD_DisplaySdMemory();
