@@ -1,23 +1,23 @@
+#include <stdlib.h>      // atof
 #include <stdio.h>
-#include <string.h>
-#include <sys/sysinfo.h>
-#include <sys/vfs.h>
+#include <string.h>      // strcmp, strcpy, strtok
+#include <sys/statfs.h>  // statfs
+#include <sys/sysinfo.h> // sysinfo
 #include "ssd1306_i2c.h"
 #include "bmp.h"
-#include <wiringPiI2C.h>
 #include "oled_fonts.h"
+#include <wiringPiI2C.h>
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <net/if.h>
-#include <unistd.h>
-#include <arpa/inet.h>
+#include <sys/ioctl.h>   // ioctl
+#include <net/if.h>      // if
+#include <unistd.h>      // close, sleep, usleep
+#include <arpa/inet.h>   // inet_ntoa
 
-char IPSource[20] = {0};
 int i2cd;
 
-//Init SSD1306
+/*
+* Init SSD1306
+*/
 void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 {
   //I2C init
@@ -52,26 +52,53 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
   OLED_WR_Byte(0xaf, OLED_CMD);
 }
 
-//Displays a string of characters
-void OLED_ShowString(unsigned char x, unsigned char y, unsigned char *chr, unsigned char Char_Size)
+/*
+* To send data
+*/
+void Write_IIC_Data(unsigned char IIC_Data)
 {
-  unsigned char j = 0;
-  while (chr[j] != '\0')
+  wiringPiI2CWriteReg8(i2cd, 0x40, IIC_Data);
+}
+
+/*
+* Send the command
+*/
+void Write_IIC_Command(unsigned char IIC_Command)
+{
+  wiringPiI2CWriteReg8(i2cd, 0x00, IIC_Command);
+}
+
+/*
+* Write a byte
+*/
+void OLED_WR_Byte(unsigned int dat, unsigned int cmd)
+{
+  if (cmd)
   {
-    OLED_ShowChar(x, y, chr[j], Char_Size);
-    x += 8;
-    if (x > 120)
-    {
-      x = 0;
-      y += 2;
-    }
-    j++;
+    Write_IIC_Data(dat);
   }
+  else
+  {
+    Write_IIC_Command(dat);
+  }
+
+  usleep(500);
+}
+
+/*
+* Coordinate setting
+*/
+void OLED_Set_Pos(unsigned char x, unsigned char y)
+{
+  OLED_WR_Byte(0xb0 + y, OLED_CMD);
+  OLED_WR_Byte(((x & 0xf0) >> 4) | 0x10, OLED_CMD);
+  OLED_WR_Byte((x & 0x0f), OLED_CMD);
 }
 
 void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char chr, unsigned char Char_Size)
 {
   unsigned char c = 0, i = 0;
+
   c = chr - ' '; //Get the offset value
   if (x > SSD1306_LCDWIDTH - 1)
   {
@@ -99,21 +126,25 @@ void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char chr, unsigned
 unsigned int OLED_pow(unsigned char m, unsigned char n)
 {
   unsigned int result = 1;
+
   while (n--)
     result *= m;
   return result;
 }
 
-//According to digital
-//x,y :Starting point coordinates
-//len :Number of digits
-//size:The font size
-//mode:0,Fill mode;1,Stacking patterns
-//num:(0~4294967295);
+/*
+* According to digital
+* x,y :Starting point coordinates
+* num :Integer [0-4294967295]
+* len :Number of digits
+* size:The font size
+* mode:0 - Fill mode; 1 - Stacking patterns
+*/
 void OLED_ShowNum(unsigned char x, unsigned char y, unsigned int num, unsigned char len, unsigned char size2)
 {
   unsigned char t, temp;
   unsigned char enshow = 0;
+
   for (t = 0; t < len; t++)
   {
     temp = (num / OLED_pow(10, len - t - 1)) % 10;
@@ -131,46 +162,30 @@ void OLED_ShowNum(unsigned char x, unsigned char y, unsigned int num, unsigned c
   }
 }
 
-//Coordinate setting
-void OLED_Set_Pos(unsigned char x, unsigned char y)
+/*
+* Displays a string of characters
+*/
+void OLED_ShowString(unsigned char x, unsigned char y, char *chr, unsigned char Char_Size)
 {
-  OLED_WR_Byte(0xb0 + y, OLED_CMD);
-  OLED_WR_Byte(((x & 0xf0) >> 4) | 0x10, OLED_CMD);
-  OLED_WR_Byte((x & 0x0f), OLED_CMD);
-}
+  unsigned char j = 0;
 
-//Write a byte
-void OLED_WR_Byte(unsigned dat, unsigned cmd)
-{
-
-  if (cmd)
+  while (chr[j] != '\0')
   {
-    Write_IIC_Data(dat);
+    OLED_ShowChar(x, y, chr[j], Char_Size);
+    x += 8;
+    if (x > 120)
+    {
+      x = 0;
+      y += 2;
+    }
+    j++;
   }
-  else
-  {
-    Write_IIC_Command(dat);
-  }
-
-  usleep(500);
 }
 
-//To send data
-void Write_IIC_Data(unsigned char IIC_Data)
-{
-  wiringPiI2CWriteReg8(i2cd, 0x40, IIC_Data);
-}
-
-//Send the command
-void Write_IIC_Command(unsigned char IIC_Command)
-{
-  wiringPiI2CWriteReg8(i2cd, 0x00, IIC_Command);
-}
-
-//Display the BMP image 128X32
-//Starting point coordinates (x,y)
-//The range of x 0~127
-//The range of y 0~4
+/*
+* Display the BMP image 128X32
+* x,y:Starting point coordinates; x [0-127], y[0-4]
+*/
 void OLED_DrawBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, unsigned char BMP[][512], unsigned char symbol)
 {
   unsigned int j = 0;
@@ -209,10 +224,13 @@ void OLED_DrawPartBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsi
   }
 }
 
-//Clear specified row
+/*
+* Clear specified row
+*/
 void OLED_ClearLint(unsigned char x1, unsigned char x2)
 {
   unsigned char i, n;
+
   for (i = x1; i < x2; i++)
   {
     OLED_WR_Byte(0xb0 + i, OLED_CMD); //Set page address
@@ -226,6 +244,7 @@ void OLED_ClearLint(unsigned char x1, unsigned char x2)
 void OLED_Clear(void)
 {
   unsigned char i, n;
+
   for (i = 0; i < 4; i++)
   {
     OLED_WR_Byte(0xb0 + i, OLED_CMD);
@@ -236,153 +255,154 @@ void OLED_Clear(void)
   }
 }
 
-//LCD displays CPU temperature and other information
-void LCD_DisplayTemperature(void)
+/*
+* sprintf-like format string with a variable number of decimals, but a fixed total number of characters
+* len  :Number of characters to print
+* len+1:Size of `dest`
+*/
+void sprintf_fix(char *dest, int len, float f)
 {
-  unsigned char symbol = 0;
-  char ip[20] = {0};
-  unsigned int temp = 0;
-  FILE *fp;
-  unsigned char buffer[80] = {0};
-  temp = GetTemperature();                                                    //Gets the temperature of the CPU
-  fp = popen("top -bn1 | grep load | awk '{printf \"%.2f\", $(NF-2)}'", "r"); //Gets the load on the CPU
-  fgets(buffer, sizeof(buffer), fp);                                          //Read the CPU load
-  pclose(fp);
-  buffer[3] = '\0';
-  strcpy(ip, GetIpAddress());
-  symbol = strcmp(IPSource, ip);
-  if (symbol != 0)
+  int prec = len - 1;
+  float power10 = 1.0;
+
+  while (f >= power10 && prec > 0)
   {
-    strcpy(IPSource, ip);
+    power10 *= 10;
+    prec--;
   }
-  OLED_Clear(); //Remove the interface
-  OLED_DrawBMP(0, 0, 128, 4, BMP, 0);
-  OLED_ShowString(30, 0, IPSource, 8); //Send the IP address to the lower machine
-  if (temp > 10)
+
+  char buf[len + 2];
+  snprintf(buf, sizeof buf, "%.*f", prec, f);
+  if (buf[0] == '0')
   {
-    OLED_ShowChar(62, 3, temp / 10 + '0', 8); //According to the temperature
-    OLED_ShowChar(70, 3, temp % 10 + '0', 8);
+    strcpy(dest, buf + 1);
+    return;
   }
   else
   {
-    OLED_ShowChar(70, 3, temp + '0', 8);
-  }
-  OLED_ShowString(87, 3, buffer, 8); //Display CPU load
-}
+    strncpy(dest, buf, (unsigned int)len);
+    dest[len] = 0;
+  }  
 
-unsigned char GetTemperature(void)
-{
-  FILE *fd;
-  unsigned int temp;
-  char buff[150] = {0};
-
-  fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-  fgets(buff, sizeof(buff), fd);
-  sscanf(buff, "%d", &temp);
-
-  fclose(fd);
-
-  return temp / 1000; //Temperature in degrees Celsius
-}
-
-//LCD displays CPU memory and other information
-void LCD_DisplayCpuMemory(void)
-{
-  struct sysinfo s_info;
-  float Totalram = 0.0;
-  float freeram = 0.0;
-  unsigned char Total[10] = {0};
-  unsigned char free[10] = {0};
-  if (sysinfo(&s_info) == 0) //Get memory information
+  //Result is shorter than width
+  if (strlen(buf) < len)
   {
-    OLED_ClearLint(2, 4);
-    OLED_DrawPartBMP(0, 2, 128, 4, BMP, 1);
-    Totalram = s_info.totalram / 1024 / 1024 / 1024.0;
-    freeram = s_info.freeram / 1024 / 1024 / 1024.0;
-    Total[0] = (unsigned char)Totalram + '0';
-    Total[1] = '.';
-    Total[2] = ((unsigned char)(Totalram * 10)) % 10 + '0';
-    Total[3] == '\0';
-
-    free[0] = (unsigned char)freeram + '0';
-    free[1] = '.';
-    free[2] = ((unsigned char)(freeram * 10)) % 10 + '0';
-    free[3] == '\0';
-    OLED_ShowString(55, 3, free, 8);
-    OLED_ShowString(90, 3, Total, 8);
-  }
-}
-
-//LCD displays SD card memory information
-void LCD_DisplaySdMemory(void)
-{
-  char usedsize_GB[10] = {0};
-  char totalsize_GB[10] = {0};
-  unsigned int MemSize = 0;
-  unsigned int size = 0;
-  struct statfs diskInfo;
-  statfs("/", &diskInfo);
-  OLED_ClearLint(2, 4);
-  OLED_DrawPartBMP(0, 2, 128, 4, BMP, 2);
-  unsigned long long blocksize = diskInfo.f_bsize;              //The number of bytes per block
-  unsigned long long totalsize = blocksize * diskInfo.f_blocks; //Total number of bytes
-  MemSize = (unsigned int)(totalsize >> 30);
-  snprintf(totalsize_GB, 7, "%d", MemSize);
-  if (MemSize > 0 && MemSize < 10)
-  {
-    OLED_ShowString(106, 3, totalsize_GB, 8);
-  }
-  else if (MemSize >= 10 && MemSize < 100)
-  {
-    OLED_ShowString(98, 3, totalsize_GB, 8);
-  }
-  else
-  {
-    OLED_ShowString(90, 3, totalsize_GB, 8);
-  }
-
-  unsigned long long freesize = blocksize * diskInfo.f_bfree; //Now let's figure out how much space we have left
-  size = freesize >> 30;
-  size = MemSize - size;
-  snprintf(usedsize_GB, 7, "%d", size);
-  if (size > 0 && size < 10)
-  {
-    OLED_ShowString(65, 3, usedsize_GB, 8);
-  }
-  else if (size >= 10 && size < 100)
-  {
-    OLED_ShowString(58, 3, usedsize_GB, 8);
-  }
-  else
-  {
-    OLED_ShowString(55, 3, usedsize_GB, 8);
+    //Right-align to field
+    snprintf(dest, len + 1, "%*s", len, buf);
   }
 }
 
 /*
-* According to the information
+* Get CPU usage using popen(top / grep /awk)
 */
-void LCD_Display(unsigned char symbol)
+float GetCpuUsageTop(void)
 {
-  switch (symbol)
+  FILE *fp;
+  char buffer[16] = {0};
+
+  fp = popen("env CPULOOP=1 top -bn 1 | grep -m 1 'Cpu(s)' | awk '{print 100 - $8}'", "r");
+  if (fp == NULL)
   {
-  case 0:
-    LCD_DisplayTemperature();
-    break;
-  case 1:
-    LCD_DisplayCpuMemory();
-    break;
-  case 2:
-    LCD_DisplaySdMemory();
-    break;
-  default:
-    break;
+    fprintf(stderr, "ssd1306_i2c: Unable to query top for CPU usage.\n");
+    return 0;
   }
+
+  fgets(buffer, sizeof(buffer), fp);
+
+  pclose(fp);
+
+/*
+  fprintf(stderr, "top CPU %f%%\n", atof(buffer));
+*/
+
+  return atof(buffer);
 }
 
-void FirstGetIpAddress(void)
+struct cpustat {
+  unsigned long int t_user;
+  unsigned long int t_nice;
+  unsigned long int t_system;
+  unsigned long int t_idle;
+  unsigned long int t_iowait;
+  unsigned long int t_irq;
+  unsigned long int t_softirq;
+  unsigned long int t_steal;
+  unsigned long int t_guest;
+  unsigned long int t_guestnice;
+};
+
+/*
+* Get CPU usage using pstat
+*/
+float GetCpuUsagePstat(void)
 {
-  strcpy(IPSource, GetIpAddress());
+  FILE *fd;
+  struct cpustat prev, cur;
+
+  fd = fopen("/proc/stat", "r");
+  if(fd == NULL)
+  {
+    fprintf(stderr, "ssd1306_i2c: Unable to open /proc/stat file.\n");
+    return 0;
+  }
+
+  fscanf(fd, "cpu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
+    &prev.t_user, &prev.t_nice, &prev.t_system, &prev.t_idle, &prev.t_iowait, &prev.t_irq, &prev.t_softirq, &prev.t_steal, &prev.t_guest, &prev.t_guestnice);
+
+  fclose(fd);
+
+  unsigned long long int prev_total = prev.t_idle + prev.t_iowait + prev.t_user + prev.t_nice + prev.t_system + prev.t_irq + prev.t_softirq + prev.t_steal;
+
+/*
+  fprintf(stderr, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n", prev.t_user, prev.t_nice, prev.t_system, prev.t_idle, prev.t_iowait, prev.t_irq, prev.t_softirq, prev.t_steal, prev.t_guest, prev.t_guestnice);
+  unsigned long long int prev_idle = prev.t_idle + prev.t_iowait;
+  unsigned long long int prev_nonidle = prev.t_user + prev.t_nice + prev.t_system + prev.t_irq + prev.t_softirq + prev.t_steal;
+  //unsigned long long int prev_total = prev_idle + prev_nonidle;
+*/
+
+  //Wait for one second to collect data to calculate delta
+  sleep(3);
+
+  fd = fopen("/proc/stat", "r");
+  if(fd == NULL)
+  {
+    fprintf(stderr, "ssd1306_i2c: Unable to open /proc/stat peudofile.\n");
+    return 0;
+  }
+
+  fscanf(fd, "cpu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
+    &cur.t_user, &cur.t_nice, &cur.t_system, &cur.t_idle, &cur.t_iowait, &cur.t_irq, &cur.t_softirq, &cur.t_steal, &cur.t_guest, &cur.t_guestnice);
+
+  fclose(fd);
+
+  unsigned long long int cur_total = cur.t_idle + cur.t_iowait + cur.t_user + cur.t_nice + cur.t_system + cur.t_irq + cur.t_softirq + cur.t_steal;
+
+/*
+  fprintf(stderr, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n", cur.t_user, cur.t_nice, cur.t_system, cur.t_idle, cur.t_iowait, cur.t_irq, cur.t_softirq, cur.t_steal, cur.t_guest, cur.t_guestnice);
+  unsigned long long int cur_idle = cur.t_idle + cur.t_iowait;
+  unsigned long long int cur_nonidle = cur.t_user + cur.t_nice + cur.t_system + cur.t_irq + cur.t_softirq + cur.t_steal;
+  //unsigned long long int cur_total = cur_idle + cur_nonidle;
+
+  fprintf(stderr, "PREV: idle:%llu\tnonidle: %llu\ttotal: %llu\n", prev_idle, prev_nonidle, prev_total);
+  fprintf(stderr, "CUR: idle:%llu\tnonidle: %llu\ttotal: %llu\n", cur_idle, cur_nonidle, cur_total);
+
+  //Calculate delta values
+  unsigned long int total_d = cur_total - prev_total;
+  unsigned long int idle_d = cur_idle - prev_idle;
+  unsigned long int used_d = total_d - idle_d;
+  //float cpu_perc = (float)used_d / (float)total_d * 100.0;
+  fprintf(stderr, "TOTAL prev: %llu\tcurr: %llu\tdelta: %lu\n", prev_total, cur_total, total_d);
+  fprintf(stderr, "IDLE  prev: %llu\tcurr: %llu\tdelta: %lu\n", prev_idle, cur_idle, idle_d);
+  fprintf(stderr, "USED  delta: %lu\n", used_d);
+*/
+  
+  float cpu_perc = (float)(cur_total - prev_total - cur.t_idle - cur.t_iowait + prev.t_idle + prev.t_iowait) / (float)(cur_total - prev_total) * 100.0;
+
+/*
+  fprintf(stderr, "pstat CPU %f%%\n", cpu_perc);
+*/
+
+  return cpu_perc;
 }
 
 char *GetIpAddress(void)
@@ -391,6 +411,11 @@ char *GetIpAddress(void)
   char line[100], *p, *c;
 
   fd = fopen("/proc/net/route", "r");
+  if(fd == NULL)
+  {
+    fprintf(stderr, "ssd1306_i2c: Unable to open /proc/net/route peudofile.\n");
+    return '\0';
+  }
 
   while (fgets(line, 100, fd))
   {
@@ -411,7 +436,7 @@ char *GetIpAddress(void)
   //Default to eth0 interface
   if (p == NULL)
   {
-    fprintf(stderr, "GetIpAddress: Unable to determine default interface.\n");
+    fprintf(stderr, "ssd1306_i2c: Unable to determine default interface. Defaulting to eth0.\n");
     p = "eth0";
   }
 
@@ -431,4 +456,181 @@ char *GetIpAddress(void)
   close(sockfd);
 
   return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
+}
+
+float GetTemperature(void)
+{
+  FILE *fd;
+  char buffer[150] = {0};
+  unsigned int temp;
+
+  fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
+  if(fd == NULL)
+  {
+    fprintf(stderr, "ssd1306_i2c: Unable to open /sys/class/thermal/thermal_zone0/temp peudofile.\n");
+    return 0;
+  }
+
+  fgets(buffer, sizeof(buffer), fd);
+
+  fclose(fd);
+
+  //Parse buffer
+  sscanf(buffer, "%u", &temp);
+
+  return temp / 1000; //Temperature in degrees Celcius
+}
+
+/*
+* LCD displays CPU temperature and other information
+*/
+void LCD_DisplayTemperature(void)
+{
+  char temp[4] = {0};
+  char cpu_perc[4] = {0};
+  char ip[20] = {0};
+
+  sprintf_fix(temp, 2, GetTemperature());       //Gets the temperature of the CPU
+  sprintf_fix(cpu_perc, 3, GetCpuUsagePstat()); //Gets the load on the CPU
+  strcpy(ip, GetIpAddress());                   //Gets the IP address of the default interface
+  OLED_Clear();                        //Clear the screen
+  OLED_DrawBMP(0, 0, 128, 4, BMP, 0);
+
+  OLED_ShowString(30, 0, ip, 8);       //Display IP address
+  OLED_ShowString(62, 3, temp, 8);     //Display CPU temperature
+  OLED_ShowString(87, 3, cpu_perc, 8); //Display CPU load
+}
+
+/*
+* LCD displays CPU memory and other information
+*/
+void LCD_DisplayCpuMemory(void)
+{
+  struct sysinfo s_info;
+  char free[4] = {0};
+  char total[4] = {0};
+
+  if (sysinfo(&s_info) == 0) //Get memory information
+  {
+    OLED_ClearLint(2, 4);
+    OLED_DrawPartBMP(0, 2, 128, 4, BMP, 1);
+
+    float freeram = ((unsigned long long int)s_info.freeram * (unsigned long long int)s_info.mem_unit >> 20) / 1024.0;
+    sprintf_fix(free, 3, freeram);
+    float totalram = ((unsigned long long int)s_info.totalram * (unsigned long long int)s_info.mem_unit >> 20) / 1024.0;
+    sprintf_fix(total, 3, totalram);
+
+/*
+    fprintf(stderr, "mem_unit: %u\n", s_info.mem_unit);
+    fprintf(stderr, "RAM Free: %f GiB\tTotal: %f GiB\n",
+      (float)(s_info.freeram * (unsigned long long)s_info.mem_unit >> 20) / 1024.0,
+      (float)(s_info.totalram * (unsigned long long)s_info.mem_unit >> 20) / 1024.0);
+*/
+
+    OLED_ShowString(55, 3, free, 8);
+    OLED_ShowString(90, 3, total, 8);
+  }
+  else
+  {
+    fprintf(stderr, "ssd1306_i2c: sysinfo() call failed.\n");
+  }
+}
+
+/*
+* LCD displays SD card memory information using popen(df / awk)
+* (Better portability)
+*/
+void LCD_DisplaySdMemoryDf(void)
+{
+  char *mnt_dir = "/";
+  FILE *fp;
+  char buffer[32] = {0};
+  float usedsize = 0;
+  float totalsize = 0;
+  char used[4] = {0};
+  char total[4] = {0};
+
+  fp = popen("df / | awk '{if (NR==2) {print $3 / 1048576\" \"$2 / 1048576}}'", "r");
+  if (fp == NULL)
+  {
+    fprintf(stderr, "ssd1306_i2c: Unable to stat %s filesystem.\n", mnt_dir);
+    return;
+  }
+
+  fgets(buffer, sizeof(buffer), fp);
+
+  pclose(fp);
+
+  //Parse buffer
+  sscanf(buffer, "%f %f", &usedsize, &totalsize);
+  sprintf_fix(total, 3, totalsize);
+  sprintf_fix(used, 3, usedsize);
+
+/*
+  fprintf(stderr, "Disk Used: %f\tTotal: %f\n", usedsize, totalsize);
+  fprintf(stderr, "Disk Used: %s GiB\tTotal: %s GiB\n", used, total);
+*/
+
+  OLED_ClearLint(2, 4);
+  OLED_DrawPartBMP(0, 2, 128, 4, BMP, 2);
+
+  OLED_ShowString(90, 3, total, 8);
+  OLED_ShowString(55, 3, used, 8);
+}
+
+/*
+* LCD displays SD card memory information using statfs()
+*/
+void LCD_DisplaySdMemoryStatfs(void)
+{
+  char *mnt_dir = "/";
+  struct statfs fs;
+  char used[4] = {0};
+  char total[4] = {0};
+  if (statfs(mnt_dir, &fs) == 0) //Get mounted filesystem information
+  {
+	float totalsize = (((unsigned long long int)fs.f_blocks * (unsigned long long int)fs.f_bsize) >> 20) / 1024.0;
+    sprintf_fix(total, 3, totalsize);
+    float usedsize = (((unsigned long long int)(fs.f_blocks - fs.f_bfree) * (unsigned long long int)fs.f_bsize) >> 20) / 1024.4;
+    sprintf_fix(used, 3, usedsize);
+
+/*
+    fprintf(stderr, "f_bsize: %u\n", fs.f_bsize);
+    fprintf(stderr, "Disk Used: %f GiB\tTotal: %f GiB\n", usedsize, totalsize);
+    fprintf(stderr, "Disk Used: %s GiB\tTotal: %s GiB\n", used, total);
+*/
+
+    OLED_ClearLint(2, 4);
+    OLED_DrawPartBMP(0, 2, 128, 4, BMP, 2);
+
+    OLED_ShowString(90, 3, total, 8);
+    OLED_ShowString(55, 3, used, 8);
+  }
+  else
+  {
+    fprintf(stderr, "ssd1306_i2c: Unable to stat %s filesystem.\n", mnt_dir);
+  }
+}
+
+/*
+* Display according to the information
+*/
+void LCD_Display(unsigned short int count)
+{
+  switch (count)
+  {
+  case 0:
+    LCD_DisplayTemperature();
+	sleep(3);
+    break;
+  case 1:
+    LCD_DisplayCpuMemory();
+	sleep(3);
+    break;
+  case 2:
+    LCD_DisplaySdMemoryDf();
+    break;
+  default:
+    break;
+  }
 }

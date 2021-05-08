@@ -1,10 +1,14 @@
 # U6143_ssd1306
-- Enable I2C interface
+
+##  I2C
+Begin by enabling the I2C interface:
+
 ```bash
 sudo raspi-config
 ```
-Choose `Interface Options` | `I2C`
-Answer `Yes` to whether you would like the ARM I2C interface to be enabled.
+
+Choose `Interface Options` | `I2C`, then answer `Yes` to whether you would like the ARM I2C interface to be enabled.
+
 - Install Git and library dependencies
 ```bash
 sudo apt update
@@ -30,32 +34,52 @@ sudo ./display
 ```
 
 ## Add automatic start script
-- Copy binary to `/usr/local/bin/`
+Copy the binary file to `/usr/local/bin/`:
+
 ```bash
 sudo cp ./display /usr/local/bin/
 ```
-- Open the rc.local file 
+
+Choose one of the following configuration options (`systemd` **or** `rc.local`):
+ 
+```bash
+sudo cp ./contrib/U6143_ssd1306.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable U6143_ssd1306.service
+```
+
+**OR** add the startup command to the `rc.local` script (not recommended)
+
 ```bash
 sudo nano /etc/rc.local
 ```
-- Add command to the rc.local file
+
+and add the command to the rc.local file:
+
 ```bash
 /usr/local/bin/display &
 ```
-## Reboot your system
+
+## Reboot
+your system
+
 ```bash
 sudo reboot now
 ```
 
-## For older 0.91 inch lcd without mcu 
-- For the older version lcd without mcu controller, you can use python demo
+## For older 0.91 inch LCD without MCU 
+For the older version LCD without MCU controller, you can use Python demo.
+
 - Install the dependent library files
+
 ```bash
 sudo pip3 install adafruit-circuitpython-ssd1306
 sudo apt-get install python3-pip
 sudo apt-get install python3-pil
 ```
+
 - Test demo 
+
 ```bash 
 cd /home/pi/U6143_ssd1306/python 
 sudo python3 ssd1306_stats.py

@@ -17,23 +17,29 @@
 
 #define SSD1306_LCDWIDTH 128
 #define SSD1306_LCDHEIGHT 32
+
 void ssd1306_begin(unsigned int switchvcc, unsigned int i2caddr); //switchvcc should be SSD1306_SWITCHCAPVCC
-void OLED_ShowString(unsigned char x, unsigned char y, unsigned char *p, unsigned char Char_Size);
-void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char chr, unsigned char Char_Size);
-void OLED_Set_Pos(unsigned char x, unsigned char y);
-void OLED_WR_Byte(unsigned dat, unsigned cmd);
 void Write_IIC_Data(unsigned char IIC_Data);
 void Write_IIC_Command(unsigned char IIC_Command);
+void OLED_WR_Byte(unsigned int dat, unsigned int cmd);
+void OLED_Set_Pos(unsigned char x, unsigned char y);
+void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char chr, unsigned char Char_Size);
+unsigned int OLED_pow(unsigned char, unsigned char);
+void OLED_ShowNum(unsigned char, unsigned char, unsigned int, unsigned char, unsigned char);
+void OLED_ShowString(unsigned char x, unsigned char y, char *p, unsigned char Char_Size);
 void OLED_DrawBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, unsigned char BMP[][512], unsigned char);
 void OLED_DrawPartBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, unsigned char BMP[][512], unsigned char);
-void OLED_Clear(void);
 void OLED_ClearLint(unsigned char, unsigned char);
-void OLED_ShowNum(unsigned char, unsigned char, unsigned int, unsigned char, unsigned char);
-unsigned int OLED_pow(unsigned char, unsigned char);
-void LCD_Display(unsigned char symbol);
-void LCD_DisplayCpuMemory(void);
-void LCD_DisplaySdMemory(void);
-void FirstGetIpAddress(void);
+void OLED_Clear(void);
+void sprintf_fix(char *dest, int len, float f);
+float GetCpuUsageTop(void);
+float GetCpuUsagePstat(void);
 char *GetIpAddress(void);
-unsigned char GetTemperature(void);
+float GetTemperature(void);
+void LCD_DisplayTemperature(void);
+void LCD_DisplayCpuMemory(void);
+void LCD_DisplaySdMemoryDf(void);
+void LCD_DisplaySdMemoryStatfs(void);
+void LCD_Display(unsigned short int symbol);
+
 #endif /* _SSD1306_I2C_H_ */
