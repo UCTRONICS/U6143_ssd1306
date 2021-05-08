@@ -9,7 +9,8 @@ sudo raspi-config
 
 Choose `Interface Options` | `I2C`, then answer `Yes` to whether you would like the ARM I2C interface to be enabled.
 
-- Install Git and library dependencies
+Install Git and library dependencies
+
 ```bash
 sudo apt update
 sudo apt install git wiringpi
@@ -68,9 +69,9 @@ sudo reboot now
 ```
 
 ## For older 0.91 inch LCD without MCU 
-For the older version LCD without MCU controller, you can use Python demo.
+For the older version LCD without MCU controller, you can use the Python demo.
 
-- Install the dependent library files
+Install the dependent library files:
 
 ```bash
 sudo pip3 install adafruit-circuitpython-ssd1306
@@ -78,9 +79,9 @@ sudo apt-get install python3-pip
 sudo apt-get install python3-pil
 ```
 
-- Test demo 
+Test demo:
 
 ```bash 
-cd /home/pi/U6143_ssd1306/python 
+cd U6143_ssd1306/python 
 sudo python3 ssd1306_stats.py
 ```
