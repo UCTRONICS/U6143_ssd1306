@@ -46,6 +46,7 @@ Choose one of the following configuration options (`systemd` **or** `rc.local`):
 sudo cp ./contrib/U6143_ssd1306.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable U6143_ssd1306.service
+sudo systemctl start U6143_ssd1306.service
 ```
 
 **OR** add the startup command to the `rc.local` script (not recommended)
@@ -60,8 +61,7 @@ and add the command to the rc.local file:
 /usr/local/bin/display &
 ```
 
-## Reboot
-your system
+Reboot your system:
 
 ```bash
 sudo reboot now
