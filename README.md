@@ -74,9 +74,9 @@ For the older version LCD without MCU controller, you can use the Python demo.
 Install the dependent library files:
 
 ```bash
+sudo apt update
+sudo apt install python3-pil python3-pip
 sudo pip3 install adafruit-circuitpython-ssd1306
-sudo apt-get install python3-pip
-sudo apt-get install python3-pil
 ```
 
 Test demo:
