@@ -4,7 +4,6 @@
 #include <sys/vfs.h>
 #include "ssd1306_i2c.h"
 #include "bmp.h"
-#include <wiringPiI2C.h>
 #include "oled_fonts.h"
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -13,6 +12,10 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sys/ioctl.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#include <fcntl.h>
 
 
 char IPSource[20]={0};
@@ -21,12 +24,25 @@ int i2cd;
 // Init SSD1306
 void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 {
-	// I2C Init
-	i2cd = wiringPiI2CSetup(i2caddr);
-	if (i2cd < 0) {
-		fprintf(stderr, "ssd1306_i2c : Unable to initialise I2C:\n");
-		return;
-	}
+  unsigned char count=0;
+  FILE* fp;
+  unsigned char buffer[20]={0};
+  unsigned char data[20]={0};
+  fp=popen("find /dev/i2c-*","r");
+  fgets(buffer,sizeof(buffer),fp);
+  pclose(fp);
+  sscanf(buffer,"%s",data);
+  // I2C Init
+  i2cd = open(data,O_RDWR);
+  if (i2cd < 0) 
+  {
+	  fprintf(stderr, "ssd1306_i2c : Unable to initialise I2C:\n");
+	  return;
+  }
+ if (ioctl(i2cd, I2C_SLAVE_FORCE, i2caddr) < 0)
+  {
+    return;
+  }
 	OLED_WR_Byte(0xAE,OLED_CMD);//Disable display
 	OLED_WR_Byte(0x40,OLED_CMD);//---set low column address
 	OLED_WR_Byte(0xB0,OLED_CMD);//---set high column address
@@ -151,13 +167,17 @@ void OLED_WR_Byte(unsigned dat,unsigned cmd)
 //To send data
 void Write_IIC_Data(unsigned char IIC_Data)
 {
-	wiringPiI2CWriteReg8(i2cd, 0x40,IIC_Data);
+  unsigned char msg[2]={0x40,0};
+  msg[1]=IIC_Data;
+  write(i2cd, msg, 2);
 }
 
 //Send the command
 void Write_IIC_Command(unsigned char IIC_Command)
 {
-	wiringPiI2CWriteReg8(i2cd, 0x00,IIC_Command);
+  unsigned char msg[2]={0x00,0};
+  msg[1]=IIC_Command;
+  write(i2cd, msg, 2);
 }
 
 
@@ -265,13 +285,10 @@ unsigned char Obaintemperature(void)
     FILE *fd;
     unsigned int temp;
     char buff[150] = {0};
-
     fd = fopen("/sys/class/thermal/thermal_zone0/temp","r");
     fgets(buff,sizeof(buff),fd);
     sscanf(buff, "%d", &temp);
-
     fclose(fd);
-
     return temp/1000*1.8+32;
 
 }
@@ -284,14 +301,36 @@ void LCD_DisPlayCpuMemory(void)
   struct sysinfo s_info;
   float Totalram=0.0;
   float freeram=0.0;
+  unsigned int value=0;
   unsigned char Total[10]={0};
   unsigned char free[10]={0};
+  unsigned char buffer[100]={0};
+  unsigned char famer[100]={0};
   if(sysinfo(&s_info)==0)            //Get memory information
   {
     OLED_ClearLint(2,4);
     OLED_DrawPartBMP(0,2,128,4,BMP,1);
-    Totalram=s_info.totalram/1024/1024/1024.0;
-    freeram=s_info.freeram/1024/1024/1024.0;
+    FILE* fp=fopen("/proc/meminfo","r");
+    if(fp==NULL)
+    {
+      return ;
+    }
+    while(fgets(buffer,sizeof(buffer),fp))
+    {
+      if(sscanf(buffer,"%s%u",famer,&value)!=2)
+      {
+	continue;
+      }
+      if(strcmp(famer,"MemTotal:")==0)
+      {
+	Totalram=value/1024.0/1024.0;
+      }
+      else if(strcmp(famer,"MemFree:")==0)
+      {
+	freeram=value/1024.0/1024.0;
+      }
+    }
+    fclose(fp);
     Total[0]=(unsigned char)Totalram+'0';
     Total[1]='.';
     Total[2]=((unsigned char)(Totalram*10))%10+'0';
@@ -320,8 +359,8 @@ void LCD_DisplaySdMemory(void)
   statfs("/",&diskInfo);
   OLED_ClearLint(2,4);
   OLED_DrawPartBMP(0,2,128,4,BMP,2);  
-	unsigned long long blocksize = diskInfo.f_bsize;// The number of bytes per block
-	unsigned long long totalsize = blocksize*diskInfo.f_blocks;//Total number of bytes	
+  unsigned long long blocksize = diskInfo.f_bsize;// The number of bytes per block
+  unsigned long long totalsize = blocksize*diskInfo.f_blocks;//Total number of bytes	
   MemSize=(unsigned int)(totalsize>>30);
   snprintf(totalsize_GB,7,"%d",MemSize);
   if(MemSize>0&&MemSize<10)
@@ -405,11 +444,19 @@ char* GetIpAddress(void)
         fd = socket(AF_INET, SOCK_DGRAM, 0);
         /* I want to get an IPv4 IP address */
         ifr.ifr_addr.sa_family = AF_INET;
-        /* I want IP address attached to "eth0" */
+        /* I want IP address attached to "wlan0" */
         strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ-1);
-        ioctl(fd, SIOCGIFADDR, &ifr);
+        symbol=ioctl(fd, SIOCGIFADDR, &ifr);
         close(fd);    
-        return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);    
+	if(symbol==0)
+	{
+        	return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);    
+	}
+	else
+	{
+		char* buffer="0.0.0.0";
+		return buffer;
+	}
     }
     /* display result */
 }
