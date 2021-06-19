@@ -486,19 +486,19 @@ float GetTemperature(void)
 */
 void LCD_DisplayTemperature(void)
 {
-  char temp[4] = {0};
-  char cpu_perc[4] = {0};
-  char ip[20] = {0};
+  char temp[3] = {0};
+  char cpu_perc[5] = {0};
+  char ip[16] = {0};
 
   sprintf_fix(temp, 2, GetTemperature());       //Gets the temperature of the CPU
-  sprintf_fix(cpu_perc, 3, GetCpuUsagePstat()); //Gets the load on the CPU
+  sprintf_fix(cpu_perc, 4, GetCpuUsagePstat()); //Gets the load on the CPU
   strcpy(ip, GetIpAddress());                   //Gets the IP address of the default interface
-  OLED_Clear();                        //Clear the screen
+  OLED_Clear();                                 //Clear the screen
   OLED_DrawBMP(0, 0, 128, 4, BMP, 0);
 
-  OLED_ShowString(30, 0, ip, 8);       //Display IP address
-  OLED_ShowString(62, 3, temp, 8);     //Display CPU temperature
-  OLED_ShowString(87, 3, cpu_perc, 8); //Display CPU load
+  OLED_ShowString(8, 0, ip, 8);        //Display IP address
+  OLED_ShowString(48, 3, temp, 8);     //Display CPU temperature
+  OLED_ShowString(85, 3, cpu_perc, 8); //Display CPU load
 }
 
 /*
