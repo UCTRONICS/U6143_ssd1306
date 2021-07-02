@@ -5,7 +5,6 @@
 tar -Pcvf U6143_ssd1306.tar \
 	/etc/systemd/system/U6143_ssd1306.service \
 	/usr/local/bin/display \
-	/usr/local/bin/gpio \
 
 ## To extract:
 # sudo tar -xvhf U6143_ssd1306.tar
