@@ -12,15 +12,15 @@ extern int i2cd;
 #define WHITE 1
 #define INVERSE 2
 
-#define OLED_CMD 0               //command
-#define OLED_DATA 1              //data
-#define SSD1306_I2C_ADDRESS 0x3C //011110+SA0+RW - 0x0C
+#define OLED_CMD 0               // command
+#define OLED_DATA 1              // data
+#define SSD1306_I2C_ADDRESS 0x3C // 011110+SA0+RW - 0x0C
 #define SSD1306_SWITCHCAPVCC 0x2
 
 #define SSD1306_LCDWIDTH 128
 #define SSD1306_LCDHEIGHT 32
 
-void ssd1306_begin(unsigned int switchvcc, unsigned int i2caddr); //switchvcc should be SSD1306_SWITCHCAPVCC
+void ssd1306_begin(unsigned int switchvcc, unsigned int i2caddr); // switchvcc should be SSD1306_SWITCHCAPVCC
 void Write_IIC_Data(unsigned char IIC_Data);
 void Write_IIC_Command(unsigned char IIC_Command);
 void OLED_WR_Byte(unsigned int dat, unsigned int cmd);

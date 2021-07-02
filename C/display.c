@@ -9,10 +9,10 @@ int main(void)
 {
   unsigned short int count = 0;
 
-  ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS); //LCD Screen initialization
-  usleep(150000);                                           //Short delay to ensure the normal response of the lower functions
+  ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS); // LCD Screen initialization
+  usleep(150000);                                           // Short delay to ensure the normal response of the lower functions
 
-  //Loop forever
+  // Loop forever
   for (;;)
   {
     LCD_Display(count);

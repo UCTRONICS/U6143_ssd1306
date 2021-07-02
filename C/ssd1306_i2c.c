@@ -1,37 +1,45 @@
-#include <stdlib.h>      // atof
 #include <stdio.h>
-#include <string.h>      // strcmp, strcpy, strtok
-#include <sys/statfs.h>  // statfs
-#include <sys/sysinfo.h> // sysinfo
+#include <fcntl.h>         // open
+#include <errno.h>         // errno
+#include <linux/i2c-dev.h> // I2C_SLAVE_FORCE
+#include <stdlib.h>        // atof
+#include <string.h>        // strcmp, strcpy, strtok
+#include <sys/statfs.h>    // statfs
+#include <sys/sysinfo.h>   // sysinfo
 #include "ssd1306_i2c.h"
 #include "bmp.h"
 #include "oled_fonts.h"
-#include <wiringPiI2C.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>   // ioctl
-#include <net/if.h>      // if
-#include <unistd.h>      // close, sleep, usleep
-#include <arpa/inet.h>   // inet_ntoa
+#include <sys/ioctl.h>     // ioctl
+#include <net/if.h>        // if
+#include <unistd.h>        // close, sleep, usleep
+#include <arpa/inet.h>     // inet_ntoa
 
-int i2cd;
+int i2cfd;
 
 /*
 * Init SSD1306
 */
 void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 {
-  //I2C init
-  i2cd = wiringPiI2CSetup(i2caddr);
-  if (i2cd < 0)
+  // I2C init
+  i2cfd = open("/dev/i2c-1", O_RDWR);
+  if (i2cfd < 0)
   {
-    fprintf(stderr, "ssd1306_i2c: Unable to initialise I2C.\n");
-    return;
+    fprintf(stderr, "ssd1306_i2c: Unable to initialize /dev/i2c-1: %s.\n", strerror(errno));
+    exit(1);
   }
-  OLED_WR_Byte(0xAE, OLED_CMD); //Disable display
-  OLED_WR_Byte(0x40, OLED_CMD); //---set low column address
-  OLED_WR_Byte(0xB0, OLED_CMD); //---set high column address
-  OLED_WR_Byte(0xC8, OLED_CMD); //-not offset
-  OLED_WR_Byte(0x81, OLED_CMD); //Set Contrast
+
+  if (ioctl(i2cfd, I2C_SLAVE_FORCE, i2caddr) < 0) {
+    fprintf(stderr, "ssd1306_i2c: ioctl error: %s.\n", strerror(errno));
+    exit(1);
+  }
+
+  OLED_WR_Byte(0xAE, OLED_CMD); // Disable display
+  OLED_WR_Byte(0x40, OLED_CMD); // ---set low column address
+  OLED_WR_Byte(0xB0, OLED_CMD); // ---set high column address
+  OLED_WR_Byte(0xC8, OLED_CMD); // -not offset
+  OLED_WR_Byte(0x81, OLED_CMD); // Set Contrast
   OLED_WR_Byte(0xff, OLED_CMD);
   OLED_WR_Byte(0xa1, OLED_CMD);
   OLED_WR_Byte(0xa6, OLED_CMD);
@@ -57,7 +65,12 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 */
 void Write_IIC_Data(unsigned char IIC_Data)
 {
-  wiringPiI2CWriteReg8(i2cd, 0x40, IIC_Data);
+  unsigned char msg[2] = {0x40, 0};
+
+  msg[1] = IIC_Data;
+  if (write(i2cfd, msg, 2) != 2) {
+    fprintf(stderr, "ssd1306_i2c: Error writing data to /dev/i2c-1: %s.\n", strerror(errno));
+  }
 }
 
 /*
@@ -65,7 +78,12 @@ void Write_IIC_Data(unsigned char IIC_Data)
 */
 void Write_IIC_Command(unsigned char IIC_Command)
 {
-  wiringPiI2CWriteReg8(i2cd, 0x00, IIC_Command);
+  unsigned char msg[2]={0x00, 0};
+
+  msg[1] = IIC_Command;
+  if (write(i2cfd, msg, 2) != 2) {
+    fprintf(stderr, "ssd1306_i2c: Error writing command to /dev/i2c-1: %s.\n", strerror(errno));
+  }
 }
 
 /*
@@ -99,7 +117,7 @@ void OLED_ShowChar(unsigned char x, unsigned char y, unsigned char chr, unsigned
 {
   unsigned char c = 0, i = 0;
 
-  c = chr - ' '; //Get the offset value
+  c = chr - ' '; // Get the offset value
   if (x > SSD1306_LCDWIDTH - 1)
   {
     x = 0;
@@ -233,9 +251,9 @@ void OLED_ClearLint(unsigned char x1, unsigned char x2)
 
   for (i = x1; i < x2; i++)
   {
-    OLED_WR_Byte(0xb0 + i, OLED_CMD); //Set page address
-    OLED_WR_Byte(0x00, OLED_CMD);     //Sets the display location - column low address
-    OLED_WR_Byte(0x10, OLED_CMD);     //Sets the display location - column high address
+    OLED_WR_Byte(0xb0 + i, OLED_CMD); // Set page address
+    OLED_WR_Byte(0x00, OLED_CMD);     // Sets the display location - column low address
+    OLED_WR_Byte(0x10, OLED_CMD);     // Sets the display location - column high address
     for (n = 0; n < 128; n++)
       OLED_WR_Byte(0, OLED_DATA);
   }
@@ -284,10 +302,10 @@ void sprintf_fix(char *dest, int len, float f)
     dest[len] = 0;
   }  
 
-  //Result is shorter than width
+  // Result is shorter than width
   if (strlen(buf) < len)
   {
-    //Right-align to field
+    // Right-align to field
     snprintf(dest, len + 1, "%*s", len, buf);
   }
 }
@@ -360,7 +378,7 @@ float GetCpuUsagePstat(void)
   //unsigned long long int prev_total = prev_idle + prev_nonidle;
 */
 
-  //Wait for one second to collect data to calculate delta
+  // Wait for one second to collect data to calculate delta
   sleep(3);
 
   fd = fopen("/proc/stat", "r");
@@ -386,7 +404,7 @@ float GetCpuUsagePstat(void)
   fprintf(stderr, "PREV: idle:%llu\tnonidle: %llu\ttotal: %llu\n", prev_idle, prev_nonidle, prev_total);
   fprintf(stderr, "CUR: idle:%llu\tnonidle: %llu\ttotal: %llu\n", cur_idle, cur_nonidle, cur_total);
 
-  //Calculate delta values
+  // Calculate delta values
   unsigned long int total_d = cur_total - prev_total;
   unsigned long int idle_d = cur_idle - prev_idle;
   unsigned long int used_d = total_d - idle_d;
@@ -433,7 +451,7 @@ char *GetIpAddress(void)
 
   fclose(fd);
 
-  //Default to eth0 interface
+  // Default to eth0 interface
   if (p == NULL)
   {
     fprintf(stderr, "ssd1306_i2c: Unable to determine default interface. Defaulting to eth0.\n");
@@ -445,10 +463,10 @@ char *GetIpAddress(void)
 
   sockfd = socket(AF_INET, SOCK_DGRAM, 0);
 
-  //Type of address to retrieve - IPv4 IP address
+  // Type of address to retrieve - IPv4 IP address
   ifr.ifr_addr.sa_family = AF_INET;
 
-  //Copy the interface name in the ifreq structure
+  // Copy the interface name in the ifreq structure
   strncpy(ifr.ifr_name, p, IFNAMSIZ - 1);
 
   ioctl(sockfd, SIOCGIFADDR, &ifr);
@@ -475,10 +493,10 @@ float GetTemperature(void)
 
   fclose(fd);
 
-  //Parse buffer
+  // Parse buffer
   sscanf(buffer, "%u", &temp);
 
-  return temp / 1000; //Temperature in degrees Celcius
+  return temp / 1000; // Temperature in degrees Celcius
 }
 
 /*
@@ -490,15 +508,15 @@ void LCD_DisplayTemperature(void)
   char cpu_perc[5] = {0};
   char ip[16] = {0};
 
-  sprintf_fix(temp, 2, GetTemperature());       //Gets the temperature of the CPU
-  sprintf_fix(cpu_perc, 4, GetCpuUsagePstat()); //Gets the load on the CPU
-  strcpy(ip, GetIpAddress());                   //Gets the IP address of the default interface
-  OLED_Clear();                                 //Clear the screen
+  sprintf_fix(temp, 2, GetTemperature());       // Gets the temperature of the CPU
+  sprintf_fix(cpu_perc, 4, GetCpuUsagePstat()); // Gets the load on the CPU
+  strcpy(ip, GetIpAddress());                   // Gets the IP address of the default interface
+  OLED_Clear();                                 // Clear the screen
   OLED_DrawBMP(0, 0, 128, 4, BMP, 0);
 
-  OLED_ShowString(8, 0, ip, 8);        //Display IP address
-  OLED_ShowString(48, 3, temp, 8);     //Display CPU temperature
-  OLED_ShowString(85, 3, cpu_perc, 8); //Display CPU load
+  OLED_ShowString(8, 0, ip, 8);        // Display IP address
+  OLED_ShowString(48, 3, temp, 8);     // Display CPU temperature
+  OLED_ShowString(85, 3, cpu_perc, 8); // Display CPU load
 }
 
 /*
@@ -510,7 +528,7 @@ void LCD_DisplayCpuMemory(void)
   char free[4] = {0};
   char total[4] = {0};
 
-  if (sysinfo(&s_info) == 0) //Get memory information
+  if (sysinfo(&s_info) == 0) // Get memory information
   {
     OLED_ClearLint(2, 4);
     OLED_DrawPartBMP(0, 2, 128, 4, BMP, 1);
@@ -561,7 +579,7 @@ void LCD_DisplaySdMemoryDf(void)
 
   pclose(fp);
 
-  //Parse buffer
+  // Parse buffer
   sscanf(buffer, "%f %f", &usedsize, &totalsize);
   sprintf_fix(total, 3, totalsize);
   sprintf_fix(used, 3, usedsize);
@@ -587,7 +605,7 @@ void LCD_DisplaySdMemoryStatfs(void)
   struct statfs fs;
   char used[4] = {0};
   char total[4] = {0};
-  if (statfs(mnt_dir, &fs) == 0) //Get mounted filesystem information
+  if (statfs(mnt_dir, &fs) == 0) // Get mounted filesystem information
   {
 	float totalsize = (((unsigned long long int)fs.f_blocks * (unsigned long long int)fs.f_bsize) >> 20) / 1024.0;
     sprintf_fix(total, 3, totalsize);
