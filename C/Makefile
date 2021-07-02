@@ -1,7 +1,7 @@
 Target  = display
 CFLAGS  = -Wall
 CXX	    = gcc
-LIBS    = -lwiringPi
+LIBS    = 
 ODIR    = obj
 SRC     = $(wildcard *.c)
 DIR     = $(notdir $(SRC))
