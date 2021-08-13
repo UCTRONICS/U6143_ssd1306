@@ -36,9 +36,11 @@ sudo python3 ssd1306.py
 ## Use the rc.local file in Ubuntu
 
 - Open the /lib/systemd/system/rc-local.service file and add the following content at the end of the file.
+```
 [Install]
 WantedBy=multi-user.target
 Alias=rc-local.service
+```
 
 - Create the rc.local file in the etc folder
 ```
