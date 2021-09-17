@@ -5,7 +5,7 @@ the development software is Visual studio 2017, and the programming language is 
 
 # Download driver
 ```bash
-git clone https://github.com/UCTRONICS/U6143_ssd1306
+git clone https://github.com/UCTRONICS/U6143_ssd1306.git
 ```
 
 # windows 10 iot system installation download
@@ -19,11 +19,6 @@ https://youtu.be/JPRUbGIyODY
 https://visualstudio.microsoft.com/
 ```
 
-# Visual studio 2017 environment configuration and use
-Visual Studio 2017 environment configuration and driver operation refer to the following link
-```bash
-https://visualstudio.microsoft.com/
-```
 
 # Running effect chart
 ![EasyBehavior](https://github.com/UCTRONICS/pic/blob/master/windows%20iot%200.91oled.png)
