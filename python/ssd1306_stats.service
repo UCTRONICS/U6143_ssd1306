@@ -1,0 +1,16 @@
+# Install:
+#
+# sudo systemctl link /home/pi/U6143_ssd1306/python/ssd1306_stats.service
+# sudo systemctl enable ssd1306_stats
+# sudo systemctl start ssd1306_stats
+
+[Unit]
+Description=UCTRONICS ssd1306 OLED display
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /home/pi/U6143_ssd1306/python/ssd1306_stats.py
+
+[Install]
+WantedBy=multi-user.target
