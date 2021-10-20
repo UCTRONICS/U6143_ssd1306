@@ -27,12 +27,12 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
   unsigned char count=0;
   FILE* fp;
   unsigned char buffer[20]={0};
-  unsigned char i2c[20]="/dev/i2c-1";
+  unsigned char i2c[20]="/dev/i2c-2";
   // I2C Init
   i2cd = open(i2c,O_RDWR);
   if (i2cd < 0) 
   {
-	  fprintf(stderr, "Device I2C-1 failed to initialize\n");
+	  fprintf(stderr, "Device I2C-2 failed to initialize\n");
 	  return;
   }
  if (ioctl(i2cd, I2C_SLAVE_FORCE, i2caddr) < 0)
@@ -427,8 +427,8 @@ char* GetIpAddress(void)
     
     /* I want to get an IPv4 IP address */
     ifr.ifr_addr.sa_family = AF_INET;
-    /* I want IP address attached to "eth0" */
-    strncpy(ifr.ifr_name, "eth0", IFNAMSIZ-1);
+    /* I want IP address attached to "enp1s0" */
+    strncpy(ifr.ifr_name, "enp1s0", IFNAMSIZ-1);
     symbol=ioctl(fd, SIOCGIFADDR, &ifr);
     close(fd);
     if(symbol==0)
