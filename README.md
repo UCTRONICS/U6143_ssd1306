@@ -50,10 +50,18 @@ cd /home/pi/U6143_ssd1306/python
 sudo python3 ssd1306_stats.py
 ```
 
+## Custom display temperature type 
+- Open the U6143_ssd1306/C/ssd1306_i2c.h file. You can modify the value of the TEMPERATURE_TYPE variable to change the type of temperature displayed. (The default is Fahrenheit)
+![EasyBehavior](https://github.com/UCTRONICS/pic/blob/master/OLED/select_temperature.jpg)
 
 
+## Custom display IPADDRESS_TYPE type 
+- Open the U6143_ssd1306/C/ssd1306_i2c.h file. You can modify the value of the IPADDRESS_TYPE variable to change the type of IP displayed. (The default is ETH0)
+![EasyBehavior](https://github.com/UCTRONICS/pic/blob/master/OLED/select_ip.jpg)
 
-
+## Custom display information 
+- Open the U6143_ssd1306/C/ssd1306_i2c.h file. You can modify the value of the IP_SWITCH variable to determine whether to display the IP address or custom information. (The custom IP address is displayed by default)
+![EasyBehavior](https://github.com/UCTRONICS/pic/blob/master/OLED/custom_display.jpg)
 
 
 
