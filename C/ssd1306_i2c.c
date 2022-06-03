@@ -511,8 +511,9 @@ void LCD_DisplayTemperature(void)
   sprintf_fix(temp, 2, GetTemperature());       // Gets the temperature of the CPU
   sprintf_fix(cpu_perc, 4, GetCpuUsagePstat()); // Gets the load on the CPU
   strcpy(ip, GetIpAddress());                   // Gets the IP address of the default interface
-  OLED_Clear();                                 // Clear the screen
-  OLED_DrawBMP(0, 0, 128, 4, BMP, 0);
+//  OLED_Clear();                                 // Clear the screen
+  OLED_ClearLint(2, 4);
+  OLED_DrawPartBMP(0, 2, 128, 4, BMP, 0);
 
   OLED_ShowString(8, 0, ip, 8);        // Display IP address
   OLED_ShowString(48, 3, temp, 8);     // Display CPU temperature
@@ -639,16 +640,18 @@ void LCD_Display(unsigned short int count)
   {
   case 0:
     LCD_DisplayTemperature();
-	sleep(3);
+    sleep(3);
     break;
   case 1:
     LCD_DisplayCpuMemory();
-	sleep(3);
+    sleep(3);
     break;
   case 2:
     LCD_DisplaySdMemoryDf();
     break;
   default:
+    OLED_Clear();
+    OLED_DrawBMP(0, 0, 128, 4, BMP, 0);
     break;
   }
 }
