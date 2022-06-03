@@ -12,6 +12,8 @@ int main(void)
   ssd1306_begin(SSD1306_SWITCHCAPVCC, SSD1306_I2C_ADDRESS); // LCD Screen initialization
   usleep(150000);                                           // Short delay to ensure the normal response of the lower functions
 
+  LCD_Display(99);
+
   // Loop forever
   for (;;)
   {
