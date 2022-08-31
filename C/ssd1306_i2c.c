@@ -10,16 +10,16 @@
 #include "bmp.h"
 #include "oled_fonts.h"
 #include <sys/types.h>
-#include <sys/ioctl.h>     // ioctl
-#include <net/if.h>        // if
-#include <unistd.h>        // close, sleep, usleep
-#include <arpa/inet.h>     // inet_ntoa
+#include <sys/ioctl.h> // ioctl
+#include <net/if.h>    // if
+#include <unistd.h>    // close, sleep, usleep
+#include <arpa/inet.h> // inet_ntoa
 
 int i2cfd;
 
 /*
-* Init SSD1306
-*/
+ * Init SSD1306
+ */
 void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 {
   // I2C init
@@ -30,7 +30,8 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
     exit(1);
   }
 
-  if (ioctl(i2cfd, I2C_SLAVE_FORCE, i2caddr) < 0) {
+  if (ioctl(i2cfd, I2C_SLAVE_FORCE, i2caddr) < 0)
+  {
     fprintf(stderr, "ssd1306_i2c: ioctl error: %s.\n", strerror(errno));
     exit(1);
   }
@@ -61,34 +62,36 @@ void ssd1306_begin(unsigned int vccstate, unsigned int i2caddr)
 }
 
 /*
-* To send data
-*/
+ * To send data
+ */
 void Write_IIC_Data(unsigned char IIC_Data)
 {
   unsigned char msg[2] = {0x40, 0};
 
   msg[1] = IIC_Data;
-  if (write(i2cfd, msg, 2) != 2) {
+  if (write(i2cfd, msg, 2) != 2)
+  {
     fprintf(stderr, "ssd1306_i2c: Error writing data to /dev/i2c-1: %s.\n", strerror(errno));
   }
 }
 
 /*
-* Send the command
-*/
+ * Send the command
+ */
 void Write_IIC_Command(unsigned char IIC_Command)
 {
-  unsigned char msg[2]={0x00, 0};
+  unsigned char msg[2] = {0x00, 0};
 
   msg[1] = IIC_Command;
-  if (write(i2cfd, msg, 2) != 2) {
+  if (write(i2cfd, msg, 2) != 2)
+  {
     fprintf(stderr, "ssd1306_i2c: Error writing command to /dev/i2c-1: %s.\n", strerror(errno));
   }
 }
 
 /*
-* Write a byte
-*/
+ * Write a byte
+ */
 void OLED_WR_Byte(unsigned int dat, unsigned int cmd)
 {
   if (cmd)
@@ -104,8 +107,8 @@ void OLED_WR_Byte(unsigned int dat, unsigned int cmd)
 }
 
 /*
-* Coordinate setting
-*/
+ * Coordinate setting
+ */
 void OLED_Set_Pos(unsigned char x, unsigned char y)
 {
   OLED_WR_Byte(0xb0 + y, OLED_CMD);
@@ -151,13 +154,13 @@ unsigned int OLED_pow(unsigned char m, unsigned char n)
 }
 
 /*
-* According to digital
-* x,y :Starting point coordinates
-* num :Integer [0-4294967295]
-* len :Number of digits
-* size:The font size
-* mode:0 - Fill mode; 1 - Stacking patterns
-*/
+ * According to digital
+ * x,y :Starting point coordinates
+ * num :Integer [0-4294967295]
+ * len :Number of digits
+ * size:The font size
+ * mode:0 - Fill mode; 1 - Stacking patterns
+ */
 void OLED_ShowNum(unsigned char x, unsigned char y, unsigned int num, unsigned char len, unsigned char size2)
 {
   unsigned char t, temp;
@@ -181,8 +184,8 @@ void OLED_ShowNum(unsigned char x, unsigned char y, unsigned int num, unsigned c
 }
 
 /*
-* Displays a string of characters
-*/
+ * Displays a string of characters
+ */
 void OLED_ShowString(unsigned char x, unsigned char y, char *chr, unsigned char Char_Size)
 {
   unsigned char j = 0;
@@ -201,9 +204,9 @@ void OLED_ShowString(unsigned char x, unsigned char y, char *chr, unsigned char 
 }
 
 /*
-* Display the BMP image 128X32
-* x,y:Starting point coordinates; x [0-127], y[0-4]
-*/
+ * Display the BMP image 128X32
+ * x,y:Starting point coordinates; x [0-127], y[0-4]
+ */
 void OLED_DrawBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsigned char y1, unsigned char BMP[][512], unsigned char symbol)
 {
   unsigned int j = 0;
@@ -243,8 +246,8 @@ void OLED_DrawPartBMP(unsigned char x0, unsigned char y0, unsigned char x1, unsi
 }
 
 /*
-* Clear specified row
-*/
+ * Clear specified row
+ */
 void OLED_ClearLint(unsigned char x1, unsigned char x2)
 {
   unsigned char i, n;
@@ -274,10 +277,10 @@ void OLED_Clear(void)
 }
 
 /*
-* sprintf-like format string with a variable number of decimals, but a fixed total number of characters
-* len  :Number of characters to print
-* len+1:Size of `dest`
-*/
+ * sprintf-like format string with a variable number of decimals, but a fixed total number of characters
+ * len  :Number of characters to print
+ * len+1:Size of `dest`
+ */
 void sprintf_fix(char *dest, int len, float f)
 {
   int prec = len - 1;
@@ -300,7 +303,7 @@ void sprintf_fix(char *dest, int len, float f)
   {
     strncpy(dest, buf, (unsigned int)len);
     dest[len] = 0;
-  }  
+  }
 
   // Result is shorter than width
   if (strlen(buf) < len)
@@ -311,8 +314,8 @@ void sprintf_fix(char *dest, int len, float f)
 }
 
 /*
-* Get CPU usage using popen(top / grep /awk)
-*/
+ * Get CPU usage using popen(top / grep /awk)
+ */
 float GetCpuUsageTop(void)
 {
   FILE *fp;
@@ -329,14 +332,15 @@ float GetCpuUsageTop(void)
 
   pclose(fp);
 
-/*
-  fprintf(stderr, "top CPU %f%%\n", atof(buffer));
-*/
+  /*
+    fprintf(stderr, "top CPU %f%%\n", atof(buffer));
+  */
 
   return atof(buffer);
 }
 
-struct cpustat {
+struct cpustat
+{
   unsigned long int t_user;
   unsigned long int t_nice;
   unsigned long int t_system;
@@ -350,75 +354,75 @@ struct cpustat {
 };
 
 /*
-* Get CPU usage using pstat
-*/
+ * Get CPU usage using pstat
+ */
 float GetCpuUsagePstat(void)
 {
   FILE *fd;
   struct cpustat prev, cur;
 
   fd = fopen("/proc/stat", "r");
-  if(fd == NULL)
+  if (fd == NULL)
   {
     fprintf(stderr, "ssd1306_i2c: Unable to open /proc/stat file.\n");
     return 0;
   }
 
   fscanf(fd, "cpu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
-    &prev.t_user, &prev.t_nice, &prev.t_system, &prev.t_idle, &prev.t_iowait, &prev.t_irq, &prev.t_softirq, &prev.t_steal, &prev.t_guest, &prev.t_guestnice);
+         &prev.t_user, &prev.t_nice, &prev.t_system, &prev.t_idle, &prev.t_iowait, &prev.t_irq, &prev.t_softirq, &prev.t_steal, &prev.t_guest, &prev.t_guestnice);
 
   fclose(fd);
 
   unsigned long long int prev_total = prev.t_idle + prev.t_iowait + prev.t_user + prev.t_nice + prev.t_system + prev.t_irq + prev.t_softirq + prev.t_steal;
 
-/*
-  fprintf(stderr, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n", prev.t_user, prev.t_nice, prev.t_system, prev.t_idle, prev.t_iowait, prev.t_irq, prev.t_softirq, prev.t_steal, prev.t_guest, prev.t_guestnice);
-  unsigned long long int prev_idle = prev.t_idle + prev.t_iowait;
-  unsigned long long int prev_nonidle = prev.t_user + prev.t_nice + prev.t_system + prev.t_irq + prev.t_softirq + prev.t_steal;
-  //unsigned long long int prev_total = prev_idle + prev_nonidle;
-*/
+  /*
+    fprintf(stderr, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n", prev.t_user, prev.t_nice, prev.t_system, prev.t_idle, prev.t_iowait, prev.t_irq, prev.t_softirq, prev.t_steal, prev.t_guest, prev.t_guestnice);
+    unsigned long long int prev_idle = prev.t_idle + prev.t_iowait;
+    unsigned long long int prev_nonidle = prev.t_user + prev.t_nice + prev.t_system + prev.t_irq + prev.t_softirq + prev.t_steal;
+    //unsigned long long int prev_total = prev_idle + prev_nonidle;
+  */
 
   // Wait for one second to collect data to calculate delta
   sleep(3);
 
   fd = fopen("/proc/stat", "r");
-  if(fd == NULL)
+  if (fd == NULL)
   {
     fprintf(stderr, "ssd1306_i2c: Unable to open /proc/stat peudofile.\n");
     return 0;
   }
 
   fscanf(fd, "cpu %lu %lu %lu %lu %lu %lu %lu %lu %lu %lu",
-    &cur.t_user, &cur.t_nice, &cur.t_system, &cur.t_idle, &cur.t_iowait, &cur.t_irq, &cur.t_softirq, &cur.t_steal, &cur.t_guest, &cur.t_guestnice);
+         &cur.t_user, &cur.t_nice, &cur.t_system, &cur.t_idle, &cur.t_iowait, &cur.t_irq, &cur.t_softirq, &cur.t_steal, &cur.t_guest, &cur.t_guestnice);
 
   fclose(fd);
 
   unsigned long long int cur_total = cur.t_idle + cur.t_iowait + cur.t_user + cur.t_nice + cur.t_system + cur.t_irq + cur.t_softirq + cur.t_steal;
 
-/*
-  fprintf(stderr, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n", cur.t_user, cur.t_nice, cur.t_system, cur.t_idle, cur.t_iowait, cur.t_irq, cur.t_softirq, cur.t_steal, cur.t_guest, cur.t_guestnice);
-  unsigned long long int cur_idle = cur.t_idle + cur.t_iowait;
-  unsigned long long int cur_nonidle = cur.t_user + cur.t_nice + cur.t_system + cur.t_irq + cur.t_softirq + cur.t_steal;
-  //unsigned long long int cur_total = cur_idle + cur_nonidle;
+  /*
+    fprintf(stderr, "%lu %lu %lu %lu %lu %lu %lu %lu %lu %lu\n", cur.t_user, cur.t_nice, cur.t_system, cur.t_idle, cur.t_iowait, cur.t_irq, cur.t_softirq, cur.t_steal, cur.t_guest, cur.t_guestnice);
+    unsigned long long int cur_idle = cur.t_idle + cur.t_iowait;
+    unsigned long long int cur_nonidle = cur.t_user + cur.t_nice + cur.t_system + cur.t_irq + cur.t_softirq + cur.t_steal;
+    //unsigned long long int cur_total = cur_idle + cur_nonidle;
 
-  fprintf(stderr, "PREV: idle:%llu\tnonidle: %llu\ttotal: %llu\n", prev_idle, prev_nonidle, prev_total);
-  fprintf(stderr, "CUR: idle:%llu\tnonidle: %llu\ttotal: %llu\n", cur_idle, cur_nonidle, cur_total);
+    fprintf(stderr, "PREV: idle:%llu\tnonidle: %llu\ttotal: %llu\n", prev_idle, prev_nonidle, prev_total);
+    fprintf(stderr, "CUR: idle:%llu\tnonidle: %llu\ttotal: %llu\n", cur_idle, cur_nonidle, cur_total);
 
-  // Calculate delta values
-  unsigned long int total_d = cur_total - prev_total;
-  unsigned long int idle_d = cur_idle - prev_idle;
-  unsigned long int used_d = total_d - idle_d;
-  //float cpu_perc = (float)used_d / (float)total_d * 100.0;
-  fprintf(stderr, "TOTAL prev: %llu\tcurr: %llu\tdelta: %lu\n", prev_total, cur_total, total_d);
-  fprintf(stderr, "IDLE  prev: %llu\tcurr: %llu\tdelta: %lu\n", prev_idle, cur_idle, idle_d);
-  fprintf(stderr, "USED  delta: %lu\n", used_d);
-*/
-  
+    // Calculate delta values
+    unsigned long int total_d = cur_total - prev_total;
+    unsigned long int idle_d = cur_idle - prev_idle;
+    unsigned long int used_d = total_d - idle_d;
+    //float cpu_perc = (float)used_d / (float)total_d * 100.0;
+    fprintf(stderr, "TOTAL prev: %llu\tcurr: %llu\tdelta: %lu\n", prev_total, cur_total, total_d);
+    fprintf(stderr, "IDLE  prev: %llu\tcurr: %llu\tdelta: %lu\n", prev_idle, cur_idle, idle_d);
+    fprintf(stderr, "USED  delta: %lu\n", used_d);
+  */
+
   float cpu_perc = (float)(cur_total - prev_total - cur.t_idle - cur.t_iowait + prev.t_idle + prev.t_iowait) / (float)(cur_total - prev_total) * 100.0;
 
-/*
-  fprintf(stderr, "pstat CPU %f%%\n", cpu_perc);
-*/
+  /*
+    fprintf(stderr, "pstat CPU %f%%\n", cpu_perc);
+  */
 
   return cpu_perc;
 }
@@ -429,7 +433,7 @@ char *GetIpAddress(void)
   char line[100], *p, *c;
 
   fd = fopen("/proc/net/route", "r");
-  if(fd == NULL)
+  if (fd == NULL)
   {
     fprintf(stderr, "ssd1306_i2c: Unable to open /proc/net/route peudofile.\n");
     return '\0';
@@ -483,7 +487,7 @@ float GetTemperature(void)
   unsigned int temp;
 
   fd = fopen("/sys/class/thermal/thermal_zone0/temp", "r");
-  if(fd == NULL)
+  if (fd == NULL)
   {
     fprintf(stderr, "ssd1306_i2c: Unable to open /sys/class/thermal/thermal_zone0/temp peudofile.\n");
     return 0;
@@ -500,8 +504,8 @@ float GetTemperature(void)
 }
 
 /*
-* LCD displays CPU temperature and other information
-*/
+ * LCD displays CPU temperature and other information
+ */
 void LCD_DisplayTemperature(void)
 {
   char temp[3] = {0};
@@ -520,8 +524,8 @@ void LCD_DisplayTemperature(void)
 }
 
 /*
-* LCD displays CPU memory and other information
-*/
+ * LCD displays CPU memory and other information
+ */
 void LCD_DisplayCpuMemory(void)
 {
   struct sysinfo s_info;
@@ -538,12 +542,12 @@ void LCD_DisplayCpuMemory(void)
     float totalram = ((unsigned long long int)s_info.totalram * (unsigned long long int)s_info.mem_unit >> 20) / 1024.0;
     sprintf_fix(total, 3, totalram);
 
-/*
-    fprintf(stderr, "mem_unit: %u\n", s_info.mem_unit);
-    fprintf(stderr, "RAM Free: %f GiB\tTotal: %f GiB\n",
-      (float)(s_info.freeram * (unsigned long long)s_info.mem_unit >> 20) / 1024.0,
-      (float)(s_info.totalram * (unsigned long long)s_info.mem_unit >> 20) / 1024.0);
-*/
+    /*
+        fprintf(stderr, "mem_unit: %u\n", s_info.mem_unit);
+        fprintf(stderr, "RAM Free: %f GiB\tTotal: %f GiB\n",
+          (float)(s_info.freeram * (unsigned long long)s_info.mem_unit >> 20) / 1024.0,
+          (float)(s_info.totalram * (unsigned long long)s_info.mem_unit >> 20) / 1024.0);
+    */
 
     OLED_ShowString(55, 3, free, 8);
     OLED_ShowString(90, 3, total, 8);
@@ -555,9 +559,9 @@ void LCD_DisplayCpuMemory(void)
 }
 
 /*
-* LCD displays SD card memory information using popen(df / awk)
-* (Better portability)
-*/
+ * LCD displays SD card memory information using popen(df / awk)
+ * (Better portability)
+ */
 void LCD_DisplaySdMemoryDf(void)
 {
   char *mnt_dir = "/";
@@ -584,10 +588,10 @@ void LCD_DisplaySdMemoryDf(void)
   sprintf_fix(total, 3, totalsize);
   sprintf_fix(used, 3, usedsize);
 
-/*
-  fprintf(stderr, "Disk Used: %f\tTotal: %f\n", usedsize, totalsize);
-  fprintf(stderr, "Disk Used: %s GiB\tTotal: %s GiB\n", used, total);
-*/
+  /*
+    fprintf(stderr, "Disk Used: %f\tTotal: %f\n", usedsize, totalsize);
+    fprintf(stderr, "Disk Used: %s GiB\tTotal: %s GiB\n", used, total);
+  */
 
   OLED_ClearLint(2, 4);
   OLED_DrawPartBMP(0, 2, 128, 4, BMP, 2);
@@ -597,8 +601,8 @@ void LCD_DisplaySdMemoryDf(void)
 }
 
 /*
-* LCD displays SD card memory information using statfs()
-*/
+ * LCD displays SD card memory information using statfs()
+ */
 void LCD_DisplaySdMemoryStatfs(void)
 {
   char *mnt_dir = "/";
@@ -607,16 +611,16 @@ void LCD_DisplaySdMemoryStatfs(void)
   char total[4] = {0};
   if (statfs(mnt_dir, &fs) == 0) // Get mounted filesystem information
   {
-	float totalsize = (((unsigned long long int)fs.f_blocks * (unsigned long long int)fs.f_bsize) >> 20) / 1024.0;
+    float totalsize = (((unsigned long long int)fs.f_blocks * (unsigned long long int)fs.f_bsize) >> 20) / 1024.0;
     sprintf_fix(total, 3, totalsize);
     float usedsize = (((unsigned long long int)(fs.f_blocks - fs.f_bfree) * (unsigned long long int)fs.f_bsize) >> 20) / 1024.4;
     sprintf_fix(used, 3, usedsize);
 
-/*
-    fprintf(stderr, "f_bsize: %u\n", fs.f_bsize);
-    fprintf(stderr, "Disk Used: %f GiB\tTotal: %f GiB\n", usedsize, totalsize);
-    fprintf(stderr, "Disk Used: %s GiB\tTotal: %s GiB\n", used, total);
-*/
+    /*
+        fprintf(stderr, "f_bsize: %u\n", fs.f_bsize);
+        fprintf(stderr, "Disk Used: %f GiB\tTotal: %f GiB\n", usedsize, totalsize);
+        fprintf(stderr, "Disk Used: %s GiB\tTotal: %s GiB\n", used, total);
+    */
 
     OLED_ClearLint(2, 4);
     OLED_DrawPartBMP(0, 2, 128, 4, BMP, 2);
@@ -631,19 +635,19 @@ void LCD_DisplaySdMemoryStatfs(void)
 }
 
 /*
-* Display according to the information
-*/
+ * Display according to the information
+ */
 void LCD_Display(unsigned short int count)
 {
   switch (count)
   {
   case 0:
     LCD_DisplayTemperature();
-	sleep(3);
+    sleep(3);
     break;
   case 1:
     LCD_DisplayCpuMemory();
-	sleep(3);
+    sleep(3);
     break;
   case 2:
     LCD_DisplaySdMemoryDf();
