@@ -14,7 +14,7 @@ git clone https://github.com/UCTRONICS/U6143_ssd1306.git
 ```
 - Compile the source code 
 ```bash
-cd U6143_SSD1306/C 
+cd U6143_ssd1306/C 
 ```
 ```bash
 make 
@@ -48,7 +48,7 @@ sudo nano /etc/rc.local
 ```
 - Add command to the rc.local file
 ```bash
-cd /home/(User name)/U6143_SSD1306/C 
+cd /home/(User name)/U6143_ssd1306/C 
 sudo make clean 
 sudo make 
 sudo ./display &
