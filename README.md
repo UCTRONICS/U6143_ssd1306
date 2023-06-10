@@ -1,6 +1,8 @@
 # U6143_ssd1306
 
-##  I2C
+Display driver for UCTRONICS Ultimate Rack with PoE Functionality for Raspberry Pi 4 (SKU U6145)
+
+## I2C
 Begin by enabling the I2C interface:
 
 ```bash
@@ -16,7 +18,7 @@ sudo apt update
 sudo apt install git wiringpi
 ```
 
-##  Clone U6143_ssd1306 library 
+## Clone U6143_ssd1306 library 
 ```bash
 git clone https://github.com/UCTRONICS/U6143_ssd1306.git
 ```

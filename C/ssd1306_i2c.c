@@ -435,7 +435,7 @@ char *GetIpAddress(void)
   fd = fopen("/proc/net/route", "r");
   if (fd == NULL)
   {
-    fprintf(stderr, "ssd1306_i2c: Unable to open /proc/net/route peudofile.\n");
+    fprintf(stderr, "ssd1306_i2c: Unable to open /proc/net/route pseudofile.\n");
     return '\0';
   }
 
@@ -500,7 +500,7 @@ float GetTemperature(void)
   // Parse buffer
   sscanf(buffer, "%u", &temp);
 
-  return temp / 1000; // Temperature in degrees Celcius
+  return temp / 1000; // Temperature in degrees Celsius
 }
 
 /*
