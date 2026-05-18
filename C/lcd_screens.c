@@ -559,7 +559,7 @@ void LCD_DisplayClock(void)
     time_t now = time(NULL);
     struct tm *t = localtime(&now);
     char timebuf[16] = {0};
-    char datebuf[16] = {0};
+    char datebuf[20] = {0};
     static const char *wdays[] = {"Sun","Mon","Tue","Wed","Thu","Fri","Sat"};
 
     snprintf(datebuf, sizeof(datebuf), "%s %04d-%02d-%02d",
@@ -574,7 +574,7 @@ void LCD_DisplayClock(void)
 
 void LCD_DisplayUptime(void)
 {
-    char uptimebuf[20] = {0}, procsbuf[12] = {0};
+    char uptimebuf[32] = {0}, procsbuf[12] = {0};
 #ifdef __linux__
     struct sysinfo s_info;
     if (sysinfo(&s_info) != 0) return;
@@ -711,7 +711,7 @@ void LCD_DisplayNetwork(void)
 
     if (nifaces == 0) { OLED_Clear(); return; }
 
-    char line1[24] = {0}, line2[24] = {0};
+    char line1[36] = {0}, line2[36] = {0};
     snprintf(line1, sizeof(line1), "%s: %s", iface_name[0], rate_str[0]);
     if (nifaces > 1)
         snprintf(line2, sizeof(line2), "%s: %s", iface_name[1], rate_str[1]);
